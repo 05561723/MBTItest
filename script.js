@@ -19,7 +19,100 @@ const groupAnalysis = document.getElementById('groupAnalysis');
 const personalityAnalysis = document.getElementById('personalityAnalysis');
 const careerList = document.getElementById('careerList');
 
-// 题库（20题，分四个维度）
+// 初始化事件监听
+function initEvents() {
+  startBtn.addEventListener('click', startQuiz);
+  restartBtn.addEventListener('click', restartQuiz);
+}
+
+// 开始测试
+function startQuiz() {
+  startPage.classList.add('hidden');
+  quizPage.classList.remove('hidden');
+  loadQuestion(0);
+}
+
+// 加载题目
+function loadQuestion(index) {
+  if (index >= totalQuestions) {
+    showResult();
+    return;
+  }
+  
+  currentQuestion = index;
+  const question = questions[index];
+  questionText.textContent = question.text;
+  optionsContainer.innerHTML = '';
+  
+  // 创建选项按钮
+  question.options.forEach(option => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = option.text;
+    btn.addEventListener('click', () => {
+      // 累加分数
+      Object.keys(option.value).forEach(key => {
+        scores[key] += option.value[key];
+      });
+      // 加载下一题
+      loadQuestion(currentQuestion + 1);
+      // 更新进度条
+      progressBar.style.width = `${((currentQuestion + 1) / totalQuestions) * 100}%`;
+    });
+    optionsContainer.appendChild(btn);
+  });
+}
+
+// 显示结果
+function showResult() {
+  // 计算人格类型
+  const type = [
+    scores.E > scores.I? 'E' : 'I',
+    scores.S > scores.N? 'S' : 'N',
+    scores.T > scores.F? 'T' : 'F',
+    scores.J > scores.P? 'J' : 'P'
+  ].join('');
+  
+  // 获取结果数据
+  const result = resultData[type];
+  const group = result.group;
+  const groupData = groupDataMap[group];
+  
+  // 更新结果页
+  typeResult.textContent = type;
+  typeTag.textContent = result.tag;
+  typeTag.style.backgroundColor = result.color;
+  groupBadge.textContent = group;
+  groupBadge.style.backgroundColor = groupData.color;
+  groupAnalysis.textContent = groupData.analysis;
+  personalityAnalysis.textContent = result.analysis;
+  
+  // 生成职业列表
+  careerList.innerHTML = '';
+  result.careers.forEach(career => {
+    const li = document.createElement('li');
+    li.textContent = career;
+    careerList.appendChild(li);
+  });
+  
+  // 切换页面
+  quizPage.classList.add('hidden');
+  resultPage.classList.remove('hidden');
+}
+
+// 重新测试
+function restartQuiz() {
+  // 重置数据
+  currentQuestion = 0;
+  Object.keys(scores).forEach(key => scores[key] = 0);
+  progressBar.style.width = '0%';
+  
+  // 切换页面
+  resultPage.classList.add('hidden');
+  startPage.classList.remove('hidden');
+}
+
+// 题库（20题）
 const questions = [
   // 一、能量来源（E/I）
   {
@@ -155,42 +248,4 @@ const questions = [
   {
     text: "15. 解决冲突时，你优先：",
     options: [
-      { text: "A. 找到最优解，不管情绪", value: { T: 3, F: 0 } },
-      { text: "B. 解决问题，减少不快", value: { T: 2, F: 1 } },
-      { text: "C. 平衡双方感受和问题", value: { T: 1, F: 2 } },
-      { text: "D. 安抚情绪，再谈解决方案", value: { T: 0, F: 3 } }
-    ]
-  },
-
-  // 四、生活态度（J/P）
-  {
-    text: "16. 你更喜欢的生活节奏：",
-    options: [
-      { text: "A. 严格按计划进行", value: { J: 3, P: 0 } },
-      { text: "B. 有大致计划，灵活调整", value: { J: 2, P: 1 } },
-      { text: "C. 少量计划，随情况变动", value: { J: 1, P: 2 } },
-      { text: "D. 顺其自然，不做计划", value: { J: 0, P: 3 } }
-    ]
-  },
-  {
-    text: "17. 面对截止日期，你会：",
-    options: [
-      { text: "A. 提前完成，绝不拖延", value: { J: 3, P: 0 } },
-      { text: "B. 按计划推进，准时完成", value: { J: 2, P: 1 } },
-      { text: "C. 临近截止时集中完成", value: { J: 1, P: 2 } },
-      { text: "D. 常拖延到最后一刻", value: { J: 0, P: 3 } }
-    ]
-  },
-  {
-    text: "18. 你的物品摆放：",
-    options: [
-      { text: "A. 整齐有序，固定位置", value: { J: 3, P: 0 } },
-      { text: "B. 大致整齐，常用物品顺手放", value: { J: 2, P: 1 } },
-      { text: "C. 有点乱，但自己能找到", value: { J: 1, P: 2 } },
-      { text: "D. 随性摆放，不拘小节", value: { J: 0, P: 3 } }
-    ]
-  },
-  {
-    text: "19. 对突发变化，你的反应：",
-    options: [
-      { text: "A. 感到烦躁，尽快恢复计划", value: { J: 3, P: 0 } },
+      { text: "A
